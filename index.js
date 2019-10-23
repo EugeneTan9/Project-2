@@ -39,10 +39,12 @@ app.get('/', (request, response) => {
     response.send("hi");
 });
 
+// render the register.jsx
 app.get('/register', (request, response) => {
     response.render("register");
 })
 
+// insert the inputtedname and password into the table(users)
 app.post('/register', (request, response) => {
 
     console.log(request.body);
@@ -60,26 +62,27 @@ app.post('/register', (request, response) => {
         }
         else {
             console.log("query result :", result);
-            response.send(result.rows);
+            response.redirect("home");
         }
     });
 });
 
-
+// render the login.jsx
 app.get('/login', (request, response) => {
     response.render("login");
 });
 
+// checking whether the inputted name and pw are matching the name and pw in the database to login
 app.post('/login', (request, response) => {
 
     console.log("request.body");
 
-    const inputtedname = [request.body.name];
+    const inputtedName = [request.body.name];
     let inputtedpassword = request.body.password;
 
     const queryString = "SELECT * FROM users WHERE name =$1";
 
-    pool.query(queryString, inputtedname, (err, result) => {
+    pool.query(queryString, inputtedName, (err, result) => {
 
         if(err) {
             console.error("query error", err.stack);
@@ -101,7 +104,7 @@ app.post('/login', (request, response) => {
                     response.cookie("user_id", user_id);
                     response.cookie("LoggedIn", hashedCookie);
 
-                    response.redirect("/");
+                    response.redirect("home");
                 }
                 else {
                     response.status(403).send("wrong password");
@@ -113,8 +116,81 @@ app.post('/login', (request, response) => {
             }
         }
     });
-
 });
+
+// render the home page if the user_id and LoggedIn cookie matches
+app.get('/home', (request, response) => {
+
+    let user_id = request.cookies["user_id"];
+    let hashedValue = sha256(user_id + SALT);
+    const id= [user_id];
+    if(hashedValue === request.cookies["LoggedIn"]) {
+
+        const queryString= 'SELECT * FROM entries WHERE user_id= $1';
+
+        pool.query(queryString,id, (err, result) => {
+
+            if(err){
+                console.error("query error :", err.message);
+                response.send("query error");
+            }
+            else{
+                console.log("query result :", result);
+                console.log(result.rows, "RESULTS");
+                const data= {
+                entry : result.rows
+                };
+                // response.send(result.rows[0]);
+                response.render("home", data);
+            }
+        });
+    }
+    else {
+        response.redirect("login");
+    }
+});
+
+app.get('/entry/new', (request, response) => {
+
+    let user_id = request.cookies["user_id"];
+    let hashedValue = sha256(user_id + SALT);
+
+    if(hashedValue === request.cookies["LoggedIn"]) {
+        response.render("newentry");
+    }
+    else {
+    response.render("newentry");
+    }
+});
+
+app.post('/home', (request, response) => {
+
+    console.log("request.body");
+
+    let user_id=request.cookies["user_id"];
+    let inputTitle= request.body.title;
+    let inputDescription= request.body.description;
+    let inputStart= request.body.start_date;
+    let inputEnd= request.body.end_date;
+    let arr= [user_id, inputTitle, inputDescription, inputStart, inputEnd];
+
+    const queryString= "INSERT INTO entries (user_id, title, description, start_date, end_date) VALUES ($1, $2, $3, $4, $5)";
+
+    pool.query(queryString, arr, (err, result) => {
+
+        if(err) {
+            console.error("query error", error.message);
+            response.send("query error");
+        }
+        else {
+            console.log("query result :", result);
+
+            response.redirect("home");
+        }
+    });
+});
+
+app.get('/home/entry/:id')
 
 /**
  * ===================================
