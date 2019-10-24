@@ -10,19 +10,22 @@ class Entry extends React.Component {
 
         let end = new Date(el.end_date);
         let formattedEnd = `${end.getDate()}/${end.getMonth()+1}/${end.getFullYear()}`
+        let url = "/entry/" + el.id +'?_method=delete';
         return (
             <div>
                 <p>{el.title}</p>
                 <p>{el.description}</p>
                 <p>{formattedStart}</p>
                 <p>{formattedEnd}</p>
+                <form action={url} method="POST">
+                <input type="submit" value="Submit"/>
+                </form>
                 </div>
         )
     })
     return (
       <html>
         <body>
-
         {entry}
         </body>
       </html>
