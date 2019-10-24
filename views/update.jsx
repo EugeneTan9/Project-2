@@ -1,24 +1,23 @@
-var React = require('react');
-
+var React = require("react");
 
 class Update extends React.Component {
   render() {
     return (
       <html>
         <body>
-          <div>
-          <form action={"/pokemon/" + this.props.id+'?_method=put'} method="POST">
-          <p>Num:</p><input type="number" name="num" value={this.props.number}/><br/>
-          <p>Name:</p><input type="text" name="name" value={this.props.name}/><br/>
-          <p>Image:</p><input type="text" name="img" value={this.props.img}/><br/>
-          <p>Height:</p><input type="text" name="height" value={this.props.height}/><br/>
-          <p>Weight</p><input type="text" name="weight" value={this.props.weight}/><br/>
-          <input type="submit" value="Submit"/>
-          </form>
-          </div>
-          </body>
-          </html>
-    );
+        <div>
+        <h1>Details of {this.props.title}</h1>
+        <form action={"/entry/" + this.props.id +'?_method=put'} method="POST">
+        <p>Title :</p><input type="text" name="title" value={this.props.title} required/><br/>
+        <p>Description :</p><input type= "text" name="description" value={this.props.description} required/><br/>
+        <p>Start Date :</p><input type="text" name="start_date" value={this.props.start_date} required/><br/>
+        <p>End Date :</p><input type="text" name="end_date" value={this.props.end_date} required/><br/>
+        <br/><input type="submit" value="Submit"/>
+        </form>
+        </div>
+        </body>
+      </html>
+    )
   }
 }
 

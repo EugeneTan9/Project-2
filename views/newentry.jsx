@@ -9,19 +9,19 @@ class Newentry extends React.Component {
           <form method="POST" action="/home">
             <p>
                 Title
-                <input name="title"/>
+                <input name="title" required/>
             </p>
             <p>
                 Description
-                <input name="description"/>
+                <input name="description" required/>
             </p>
             <p>
                 Start Date
-                <input type="date" name="start_date"/>
+                <input type="date" name="start_date" required/>
             </p>
             <p>
                 End Date
-                <input type="date" name="end_date"/>
+                <input type="date" name="end_date" required/>
             </p>
             <p>
                 <input type="submit"/>

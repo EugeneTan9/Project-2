@@ -159,7 +159,7 @@ app.get('/entry/new', (request, response) => {
         response.render("newentry");
     }
     else {
-    response.render("newentry");
+    response.render("login");
     }
 });
 
@@ -190,7 +190,133 @@ app.post('/home', (request, response) => {
     });
 });
 
-app.get('/home/entry/:id')
+app.get('/entry/:id', (request, response) => {
+
+    console.log(request.params.id);
+    let userId = request.cookies["user_id"];
+    let hashedValue = sha256(userId + SALT);
+
+
+    if(hashedValue === request.cookies["LoggedIn"]) {
+
+        const id = [request.params.id];
+        const queryString= "SELECT * FROM entries WHERE id=$1";
+
+        pool.query(queryString, id, (err, result) => {
+
+            if(err) {
+                console.error("query error ", err.message);
+                response.send("query error");
+            }
+            else {
+                console.log("query result :",result.rows[0]);
+                console.log("user_id :", result.rows[0].user_id);
+                console.log("userId :", userId);
+                console.log(parseInt(userId) === result.rows[0].user_id)
+                if(parseInt(userId) === result.rows[0].user_id) {
+
+                    const data = {
+                        entry : result.rows
+                    };
+                    response.render("entry", data);
+                }
+                else {
+                    response.send("Sorry, entry not available")
+                }
+            }
+        });
+    }
+    else {
+    response.render("login");
+    }
+});
+
+// render the entry of the user that he is finding. If its another user's entry he will be blocked from seeing
+app.get('/entry/:id/edit', (request, response) => {
+
+    console.log(request.params.id);
+    let userId = request.cookies["user_id"];
+    let hashedValue = sha256(userId + SALT);
+
+
+    if(hashedValue === request.cookies["LoggedIn"]) {
+
+        const id = [request.params.id];
+        const queryString= "SELECT * FROM entries WHERE id=$1";
+
+        pool.query(queryString, id, (err, result) => {
+
+            if(err) {
+                console.error("query error ", err.message);
+                response.send("query error");
+            }
+            else {
+                console.log("query result :",result.rows[0]);
+                console.log("user_id :", result.rows[0].user_id);
+                console.log("userId :", userId);
+                console.log(parseInt(userId) === result.rows[0].user_id)
+                if(parseInt(userId) === result.rows[0].user_id) {
+
+                    response.render("update", result.rows[0]);
+                }
+                else {
+                    response.send("Sorry, entry not available")
+                }
+            }
+        });
+    }
+    else {
+    response.render("login");
+    }
+});
+
+
+app.put('/entry/:id', (request, response) => {
+
+    console.log(request.body);
+    let title = request.body.title;
+    let description = request.body.description;
+    let start_date = request.body.start_date;
+    let start = new Date(start_date);
+    let formattedStart = `${start.getDate()}/${start.getMonth()+1}/${start.getFullYear()}`
+    let end_date = request.body.end_date;
+    let end = new Date(end_date);
+    let formattedEnd = `${end.getDate()}/${end.getMonth()+1}/${end.getFullYear()}`
+    let id = request.params.id;
+    const arr = [title, description, formattedStart, formattedEnd, id];
+    console.log("arr", arr);
+
+    const queryString = "UPDATE entries SET title=$1, description=$2, start_date=$3, end_date=$4 WHERE id=$5";
+
+    pool.query(queryString, arr, (err, result) => {
+
+        if(err) {
+            console.error("query error :", err.message);
+            response.send("query error");
+        }
+        else {
+            response.redirect("/home");
+        }
+    });
+});
+
+app.delete('/entry/:id', (request, response) => {
+
+    const id = [request.params.id];
+
+    const queryString = "DELETE FROM entries WHERE id=$1";
+
+    pool.query(queryString, id, (err, result) => {
+
+        if(err) {
+            console.error("query error", err.message);
+            response.send("query error");
+        }
+        else {
+            response.redirect("/home");
+        }
+    })
+})
 
 /**
  * ===================================

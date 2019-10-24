@@ -1,6 +1,6 @@
 var React = require('react');
 
-class Home extends React.Component {
+class Entry extends React.Component {
   render() {
 
     let entry = this.props.entry.map(el => {
@@ -23,7 +23,6 @@ class Home extends React.Component {
       <html>
         <body>
 
-        <h1>Welcome</h1>
         {entry}
         </body>
       </html>
@@ -31,4 +30,4 @@ class Home extends React.Component {
   }
 }
 
-module.exports = Home;
+module.exports = Entry;
