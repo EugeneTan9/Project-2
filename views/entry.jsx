@@ -18,7 +18,7 @@ class Entry extends React.Component {
                 <p>{formattedStart}</p>
                 <p>{formattedEnd}</p>
                 <form action={url} method="POST">
-                <input type="submit" value="Submit"/>
+                <input type="submit" value="Delete"/>
                 </form>
                 </div>
         )

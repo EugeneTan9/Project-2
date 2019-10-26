@@ -4,6 +4,9 @@ class Login extends React.Component {
   render() {
     return (
       <html>
+      <head>
+      <link rel="stylesheet" href="/styles.css"/>
+      </head>
         <body>
         <h1>Login</h1>
           <form method="POST" action="/login">

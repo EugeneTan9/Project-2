@@ -17,8 +17,7 @@ const configs = {
 const pool = new pg.Pool(configs);
 
 const app = express();
-
-
+app.use(express.static(__dirname+'/public/'));
 app.use(express.json());
 app.use(express.urlencoded({
   extended: true
@@ -82,6 +81,7 @@ app.post('/login', (request, response) => {
 
     const queryString = "SELECT * FROM users WHERE name =$1";
 
+// checking whether the the inputted username === to the username in the table
     pool.query(queryString, inputtedName, (err, result) => {
 
         if(err) {
@@ -90,17 +90,18 @@ app.post('/login', (request, response) => {
         }
         else {
             console.log("query result :", result.rows);
-
+// if there are usernames that corresponds with the inputtedusername then check if the inputted pw === to the table pw
             if(result.rows.length > 0) {
 
                 let hashRequestedPassword = sha256(inputtedpassword + SALT);
                 console.log("hashRequestedPassword :", hashRequestedPassword);
-
+//          condition to check whether the inputted password === to the database password
                 if(hashRequestedPassword === result.rows[0].password) {
 
                     let user_id = result.rows[0].id;
                     let hashedCookie = sha256(user_id + SALT);
 
+// add in 2 cookies so that you can know which user it is inside the web pages and also to use it to extract its data from the database
                     response.cookie("user_id", user_id);
                     response.cookie("LoggedIn", hashedCookie);
 
@@ -120,12 +121,13 @@ app.post('/login', (request, response) => {
 
 // render the home page if the user_id and LoggedIn cookie matches
 app.get('/home', (request, response) => {
-
+// checking whether it is the user
     let user_id = request.cookies["user_id"];
     let hashedValue = sha256(user_id + SALT);
     const id= [user_id];
     if(hashedValue === request.cookies["LoggedIn"]) {
 
+// extracting all user's entries(data) from the database
         const queryString= 'SELECT * FROM entries WHERE user_id= $1';
 
         pool.query(queryString,id, (err, result) => {
@@ -150,6 +152,7 @@ app.get('/home', (request, response) => {
     }
 });
 
+// rendering the newentry.jsx to insert a new entry
 app.get('/entry/new', (request, response) => {
 
     let user_id = request.cookies["user_id"];
@@ -163,6 +166,7 @@ app.get('/entry/new', (request, response) => {
     }
 });
 
+//   Inserting the inputted data into the database and redirecting back to home
 app.post('/home', (request, response) => {
 
     console.log("request.body");
@@ -189,7 +193,7 @@ app.post('/home', (request, response) => {
         }
     });
 });
-
+//  retrieving the data from only 1 entry and displaying it on the jsx. The user will be prevented from reading other users' entries
 app.get('/entry/:id', (request, response) => {
 
     console.log(request.params.id);
@@ -315,7 +319,18 @@ app.delete('/entry/:id', (request, response) => {
         else {
             response.redirect("/home");
         }
-    })
+    });
+});
+
+app.get('/project/create', (request, response) => {
+
+    let userId = request.cookies["user_id"];
+    let hashedValue = sha256(userId + SALT);
+
+    if(hashedValue === request.cookies["LoggedIn"]) {
+
+        response.render("project");
+    }
 })
 
 /**

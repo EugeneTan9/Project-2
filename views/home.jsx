@@ -3,6 +3,13 @@ var React = require('react');
 class Home extends React.Component {
   render() {
 
+    let currentDate = new Date();
+    var date = currentDate.getDate();
+    var month = currentDate.getMonth(); //Be careful! January is 0 not 1
+    var year = currentDate.getFullYear();
+    var dateString = year + "-" +(month + 1) + "-" + date;
+    console.log(dateString);
+
     let entry = this.props.entry.map(el => {
 
         let start = new Date(el.start_date);
@@ -10,21 +17,53 @@ class Home extends React.Component {
 
         let end = new Date(el.end_date);
         let formattedEnd = `${end.getDate()}/${end.getMonth()+1}/${end.getFullYear()}`
+        let url = "/entry/" + el.id + "/edit";
+        let del = "/entry/" + el.id + '?_method=delete';
         return (
-            <div>
-                <p>{el.title}</p>
-                <p>{el.description}</p>
-                <p>{formattedStart}</p>
-                <p>{formattedEnd}</p>
+            <div class="card">
+                <div class="title">
+                    <a href={url}><p class="title-p">{el.title}</p></a>
+                    <form action={del} method="POST">
+                    <input type="submit" class="del-btn" value=""/></form>
+                </div>
+                <p>Description: {el.description}</p>
+                <p>Start : {formattedStart}</p>
+                <p>End : {formattedEnd}</p>
                 </div>
         )
     })
     return (
       <html>
+      <head>
+      <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous"/>
+      <link rel="stylesheet" href="/styles.css"/>
+      </head>
         <body>
+            <nav class="navbar navbar-expand-lg ">
+                <a class="navbar-brand" href="#">Welcome</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item active">
+                            <a class="nav-link" href="/home">Home <span class="sr-only">(current)</span></a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="/entry/new">New</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#">Project</a>
+                        </li>
+                    </ul>
+                </div>
+            </nav>
 
-        <h1>Welcome</h1>
         {entry}
+
+        <script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/       X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="     sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js" integrity="sha384-JjSmVgyd0p3pXB1rRibZUAYoIIy6OrQ6VrjIEaFf/nJGzIxFDsf4x0xIM+B07jRM" crossorigin="anonymous"></script>
         </body>
       </html>
     );
