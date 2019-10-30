@@ -3,6 +3,7 @@ const methodOverride = require('method-override');
 const pg = require('pg');
 var sha256 = require('js-sha256');
 const cookieParser = require('cookie-parser');
+const url = require('url');
 
 var SALT = "project2";
 
