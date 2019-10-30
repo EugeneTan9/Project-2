@@ -6,13 +6,28 @@ const cookieParser = require('cookie-parser');
 
 var SALT = "project2";
 
-const configs = {
-  user: 'eugene',
-  host: '127.0.0.1',
-  database: 'project2',
-  port: 5432,
-};
+if( process.env.DATABASE_URL ){
 
+  const params = url.parse(process.env.DATABASE_URL);
+  const auth = params.auth.split(':');
+
+  configs = {
+    user: auth[0],
+    password: auth[1],
+    host: params.hostname,
+    port: params.port,
+    database: params.pathname.split('/')[1],
+    ssl: true
+  };
+
+}else{
+  configs = {
+    user: 'eugene',
+    host: '127.0.0.1',
+    database: 'project2',
+    port: 5432
+  };
+}
 
 const pool = new pg.Pool(configs);
 
@@ -57,7 +72,7 @@ app.post('/register', (request, response) => {
 
         if(err) {
             console.error("query error :",err.stack);
-            response.send("query error");
+            response.redirect("register");
         }
         else {
             console.log("query result :", result);
@@ -128,7 +143,7 @@ app.get('/home', (request, response) => {
     if(hashedValue === request.cookies["LoggedIn"]) {
 
 // extracting all user's entries(data) from the database
-        const queryString= 'SELECT * FROM entries WHERE user_id= $1';
+        const queryString= 'SELECT * FROM entries WHERE user_id= $1 ORDER BY start_date ASC';
 
         pool.query(queryString,id, (err, result) => {
 
@@ -177,22 +192,40 @@ app.post('/home', (request, response) => {
     let inputStart= request.body.start_date;
     let inputEnd= request.body.end_date;
     let arr= [user_id, inputTitle, inputDescription, inputStart, inputEnd];
+    if(inputStart > inputEnd){
+        console.log("date error");
+        response.render("newentry");
+    }
+    else{
+        const queryString= "INSERT INTO entries (user_id, title, description, start_date, end_date) VALUES ($1, $2, $3, $4, $5)";
+        pool.query(queryString, arr, (err,result) => {
+            if(err) {
+                console.error("query error", error.message);
+                response.send("query error");
+            }
+            else{
+                console.log("query result :", result);
 
-    const queryString= "INSERT INTO entries (user_id, title, description, start_date, end_date) VALUES ($1, $2, $3, $4, $5)";
+                response.redirect("home");
+            }
+        });
+    }
+    // const queryString= "INSERT INTO entries (user_id, title, description, start_date, end_date) VALUES ($1, $2, $3, $4, $5)";
 
-    pool.query(queryString, arr, (err, result) => {
+    // pool.query(queryString, arr, (err, result) => {
 
-        if(err) {
-            console.error("query error", error.message);
-            response.send("query error");
-        }
-        else {
-            console.log("query result :", result);
+    //     if(err) {
+    //         console.error("query error", error.message);
+    //         response.send("query error");
+    //     }
+    //     else {
+    //         console.log("query result :", result);
 
-            response.redirect("home");
-        }
-    });
+    //         response.redirect("home");
+    //     }
+    // });
 });
+
 //  retrieving the data from only 1 entry and displaying it on the jsx. The user will be prevented from reading other users' entries
 app.get('/entry/:id', (request, response) => {
 
@@ -274,10 +307,32 @@ app.get('/entry/:id/edit', (request, response) => {
     }
 });
 
+app.post('/entry/:id/progress', (request, response) => {
 
+    let progress = true;
+    const arr = [progress, request.params.id];
+
+    const queryString = "UPDATE entries SET progress=$1 WHERE id=$2";
+
+    pool.query(queryString, arr, (err, result) => {
+
+        if(err) {
+            console.error("query error", err.message);
+            response.send("query error");
+        }
+        else{
+            response.redirect("/home");
+        }
+    });
+});
+
+// Update the existing entry
 app.put('/entry/:id', (request, response) => {
+    console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
 
     console.log(request.body);
+    console.log("@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@")
+
     let title = request.body.title;
     let description = request.body.description;
     let start_date = request.body.start_date;
@@ -290,19 +345,42 @@ app.put('/entry/:id', (request, response) => {
     const arr = [title, description, formattedStart, formattedEnd, id];
     console.log("arr", arr);
 
-    const queryString = "UPDATE entries SET title=$1, description=$2, start_date=$3, end_date=$4 WHERE id=$5";
+// check whether the start date is later than the end date. If it is it will reload the page
+    if(formattedStart > formattedEnd){
+        console.log("date error");
+        response.redirect("/entry/"+ id + "/edit");
+    }
+    else{
+        const queryString="UPDATE entries SET title=$1, description=$2, start_date=$3, end_date=$4 WHERE id=$5";
 
-    pool.query(queryString, arr, (err, result) => {
+        pool.query(queryString,arr, (err, result) => {
 
-        if(err) {
-            console.error("query error :", err.message);
-            response.send("query error");
-        }
-        else {
-            response.redirect("/home");
-        }
-    });
+            if(err){
+                console.error("query error :", err.message);
+                response.send("query error");
+            }
+            else{
+                console.log("query result :", result);
+
+                response.redirect("/home");
+            }
+        });
+    }
+    // const queryString = "UPDATE entries SET title=$1, description=$2, start_date=$3, end_date=$4 WHERE id=$5";
+
+    // pool.query(queryString, arr, (err, result) => {
+
+    //     if(err) {
+    //         console.error("query error :", err.message);
+    //         response.send("query error");
+    //     }
+    //     else {
+    //         response.redirect("/home");
+    //     }
+    // });
 });
+
+
 
 app.delete('/entry/:id', (request, response) => {
 
@@ -331,7 +409,7 @@ app.get('/project/create', (request, response) => {
 
         response.render("project");
     }
-})
+});
 
 /**
  * ===================================

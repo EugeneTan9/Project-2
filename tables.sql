@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS entries (
     title TEXT,
     description TEXT,
     start_date TIMESTAMP,
-    end_date TIMESTAMP
+    end_date TIMESTAMP,
+    progress BOOLEAN DEFAULT false
 );
 
 CREATE TABLE IF NOT EXISTS users_projects (
